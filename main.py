@@ -1,6 +1,7 @@
 import curses
 import time
 
+# TODO: tests!
 def main(stdscr):
     # Intro screen
     # TODO: Add input for grid size here
@@ -33,65 +34,57 @@ def main(stdscr):
         # The starting coordinates for the viewport position
         adjust_x, adjust_y = 0, 0
         stdscr.nodelay(True) # TODO: without this line it doesn't work. find out why
-
+        
+        pause = False
         while True:
+            # TODO: this viewport moving code won't be useful once the board is restricted
+            # in size, so this can be modified into a cursor for the user to draw
+            # starting shapes in a later version.
+            # move = stdscr.getch()
+            # if move == ord("a"):
+            #     adjust_x += -1
+            # elif move == ord("d"):
+            #     adjust_x += 1
+            # elif move == ord("s"):
+            #     adjust_y += -1
+            # elif move == ord("w"):
+            #     adjust_y += 1
+            # elif move == ord("q"):
+            #     exit(0)
+            # else:
+            #     pass
+
             move = stdscr.getch()
-            if move == ord("a"):
-                adjust_x += -1
-            elif move == ord("d"):
-                adjust_x += 1
-            elif move == ord("s"):
-                adjust_y += -1
-            elif move == ord("w"):
-                adjust_y += 1
-            elif move == ord("q"):
+            if move == ord("q"):
                 exit(0)
-            else:
-                pass
 
             stdscr.clear()
 
             live_cells.play_game()
+
+            # TODO: make these user inputtable to adjust board size?
             max_y, max_x = stdscr.getmaxyx()
+            
             for x, y in live_cells.keys():
+                # 'adjust' vars are to do with viewport moving code above
                 visible_x = (0 + adjust_x) < x < (max_x + adjust_x)
                 visible_y = (0 + adjust_y) < y < (max_y + adjust_y)
                 if visible_x and visible_y:
                     # The try/except here catches an error from printing
                     # at the bottom right corner.
                     try:
-                        # TODO: find a way to make these square and still flush against each other
-                        value = '██' if live_cells.get(y - adjust_y, ) else '░░'
-                        stdscr.addstr(y - adjust_y, x - adjust_x, value)
+                        stdscr.addstr(y - adjust_y, x - adjust_x, '██')
                     except curses.error:
                         pass
-            curses.curs_set(0)
+            curses.curs_set(0)    
             stdscr.refresh()
-            time.sleep(.1)
-
-        # grid = render_grid(live_cells, (10, 10)) # TODO: make these user inputtable
-
-        # # The starting coordinates for the viewport position
-        # adjust_x, adjust_y = 0, 0
-
-        # stdscr.refresh()
-        # stdscr.getch()
+            time.sleep(0.2)
 
     elif keypress == ord("q"):
         exit(0)
     #####
 
     return
-
-
-
-# def render_grid(live_cells, size):
-#     """Generate full grid of current game status for display."""
-#     grid = {}
-#     for x in range (0, size[0]):
-#         for y in range (0, size[1]):
-#             grid[(x, y)] = live_cells[(x, y)]
-#     return grid
 
 # TODO: move to another file?
 class Life(dict):
