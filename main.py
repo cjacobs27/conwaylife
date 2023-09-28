@@ -21,21 +21,24 @@ def main(stdscr):
         ### Initialize game ###
 
         # live cell coordinates are stored in this defaultdict, dead ones are not
+        # TODO: make these user inputtable to adjust board size?
+        max_y, max_x = stdscr.getmaxyx()
+
+        # TODO: make relative to board size/in central position using max x and y
         live_cells = Life(
             {
-                (25, 15): 1,
-                (26, 15): 1,
-                (25, 16): 1,
-                (24, 16): 1,
-                (25, 17): 1,
+                (45, 5): 1,
+                (46, 5): 1,
+                (45, 6): 1,
+                (44, 6): 1,
+                (45, 7): 1,
             }
         )
 
         # The starting coordinates for the viewport position
         adjust_x, adjust_y = 0, 0
-        stdscr.nodelay(True) # TODO: without this line it doesn't work. find out why
+        stdscr.nodelay(True)
         
-        pause = False
         while True:
             # TODO: this viewport moving code won't be useful once the board is restricted
             # in size, so this can be modified into a cursor for the user to draw
@@ -60,10 +63,32 @@ def main(stdscr):
 
             stdscr.clear()
 
-            live_cells.play_game()
+            ### Draw border ###
+            # TODO: separate method
 
-            # TODO: make these user inputtable to adjust board size?
-            max_y, max_x = stdscr.getmaxyx()
+            y_border_coords = {}
+            x_border_coords = {}
+            for i in range(0,max_x):
+                # curses coords are Y, X
+                x_border_coords[(0,i)] = '--'
+                x_border_coords[(max_y-1, i)] = '--'
+
+            for i in range(0,max_y):
+                y_border_coords[(i, 0)] = '!'
+                y_border_coords[(i, max_x - 1)] = '!'
+
+            border_coords = x_border_coords | y_border_coords
+            print(f'border_coords: {border_coords}')
+            for coords in border_coords.keys():
+                try:   
+                    stdscr.addstr(coords[0], coords[1], border_coords.get(coords))
+                except curses.error as ex:
+                    pass
+            ###################
+
+
+            # TODO: store border on the Life obj to avoid passing in here
+            live_cells.play_game(border_coords)
             
             for x, y in live_cells.keys():
                 # 'adjust' vars are to do with viewport moving code above
@@ -81,6 +106,7 @@ def main(stdscr):
             time.sleep(0.2)
 
     elif keypress == ord("q"):
+        stdscr.clear()
         exit(0)
     #####
 
@@ -134,7 +160,7 @@ class Life(dict):
             pass
         return live, dead
     
-    def play_game(self):
+    def play_game(self, border_coords):
         """Play one generation in Life."""
         live, dead = [], []
 
@@ -149,7 +175,8 @@ class Life(dict):
                 # thanks to the __missing__ method on Life()
                 del self[x, y]
         for x, y in live:
-            self[x, y] = 1
+            if (y, x) not in border_coords:
+                self[x, y] = 1
 
 
 if __name__ == "__main__":
